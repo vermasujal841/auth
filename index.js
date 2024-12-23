@@ -6,10 +6,10 @@
 //token from the local storage
 const express = require("express")
 const jwt =require("jsonwebtoken");
-const jwtPassword = "123456";
+const jwtPassword = "123456"; // it is the secret passwort remember access token secret from chai code
 
 const app= express();
-
+app.use(express.json())
 const ALL_USERS = [
     {
         username : "harkirat@gmail.com",
@@ -29,7 +29,14 @@ const ALL_USERS = [
 ];
 
 function userExists(username, password){
-
+    let userExist=false;
+    for(let i=0;i<ALL_USERS.length;i++){
+       const obj=ALL_USERS[i];
+       if(username===obj["username"] && password===obj["password"]){
+        userExist=true;
+       }
+    }
+    return userExist;
 }
 
 app.post("/signin",function (req, res){
@@ -41,7 +48,7 @@ app.post("/signin",function (req, res){
         });
     }
 
-    let token = jwt.sign({username:username},"kuch");
+    let token = jwt.sign({username:username},jwtPassword); // sign is used for making the jwt token and store it with the jwtPassword or secret
     return res.json({
         token,
     });
@@ -51,14 +58,21 @@ app.post("/signin",function (req, res){
 app.get("/users", function (req,res){
     const token = req.headers.authorization;
     try{
-        const decoded = jwt.verify(token, jwtPassword);
+        const decoded = jwt.verify(token, jwtPassword);// take the token and jwtpassword decoded it 
         const username = decoded.username;
+        const obj=ALL_USERS.filter((val)=>{
+            return val.username!=username;
+        })
+        res.json({
+            users:obj
+        })
     }
     catch(err){
         return res.status(403).json({
             msg:"Invalid token",
         });
     }
+    
 });
 
 app.listen(3000);
